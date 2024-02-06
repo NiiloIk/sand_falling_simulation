@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div style="padding: 20px;">
+    <canvas id="myCanvas"></canvas>
+  </div>
+  <script>
+    const canvas = document.getElementById('myCanvas')
+    const ctx = canvas.getContext('2d')
+
+    const grid = 75
+    const w = 10
+    const canvasWidth = grid * w
+    canvas.width = canvasWidth
+    canvas.height = canvasWidth
+    let colorValue = 0
+    let colorVariable = 0.02
+
+    const make2DArray = (width, height) => {
+      let arr = new Array(height).fill(0)
+      for (let i = 0; i < width; i++) {
+        arr[i] = new Array(width).fill(0)
+      }
+      return arr
+    }
+
+
+    let data = make2DArray(grid, grid)
+
+    function draw() {
+      for (let i = 0; i < grid; i++) {
+        for (let j = 0; j < grid; j++) {
+          let x = i * w
+          let y = j * w
+
+          data[i][j]
+            ? ctx.fillStyle = data[i][j]
+            : ctx.fillStyle = "black"
+          ctx.fillRect(x, y, w, w)
+        }
+      }
+    }
+
+    function nextGrid() {
+      let newGrid = make2DArray(grid, grid)
+      for (let i = 0; i < grid; i++) {
+        for (let j = 0; j < grid; j++) {
+          if (data[i][j] !== 0) {
+            const below = data[i][j + 1]
+            const dir = Math.random() < 0.5 ? 1 : -1
+
+            const right = i >= grid - 1
+            const left = i <= 0
+
+            let belowA, belowB
+            if (i - dir >= 0 && i - dir <= grid - 1) {
+              belowA = data[i - dir][j + 1]
+            }
+            if (i + dir >= 0 && i + dir <= grid - 1) {
+              belowB = data[i + dir][j + 1]
+            }
+
+            if (below === 0) { // check if below is empty
+              newGrid[i][j + 1] = data[i][j]
+            } else if (below !== 0 && belowA === 0) { // side A
+              newGrid[i - dir][j + 1] = data[i][j]
+            } else if (data[i][j + 1] === 1 && belowB === 0) { // side B
+              newGrid[i + dir][j + 1] = data[i][j]
+            } else {
+              newGrid[i][j] = data[i][j]
+            }
+          }
+        }
+      }
+      return newGrid
+    }
+
+    function animate() {
+      data = nextGrid()
+      draw()
+      setTimeout(() => {
+        animate()
+      }, 20)
+      console.log(".")
+    }
+
+    animate()
+
+    function returnColorValue() {
+      colorValue += colorVariable
+
+      const red = Math.abs(Math.floor(44 + colorValue))
+      const green = Math.abs(Math.floor(66 + colorValue))
+      const blue = Math.abs(Math.floor(31 - colorValue))
+
+      if (colorValue >= 255 || colorValue <= 0) {
+        colorVariable *= -1
+      }
+
+      return `rgb(${red} ${green} ${blue})`
+    }
+
+    function mousePosition(e) {
+      let matrix = 2
+      let extent = Math.floor(matrix / 2)
+      for (let i = -extent; i <= extent; i++) {
+        for (let j = -extent; j <= extent; j++) {
+          const x = Math.floor(e.x / w) + i
+          const y = Math.floor(e.y / w) + j
+
+          if (x > 0 && x <= grid && y >= 0 && y <= grid) {
+            data[x - 1][y - 1] = returnColorValue()
+          }
+        }
+      }
+    }
+
+    canvas.addEventListener('mousemove', mousePosition)
+  </script>
+</body>
+
+</html>
